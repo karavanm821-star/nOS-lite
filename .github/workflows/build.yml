@@ -1,32 +1,61 @@
-name: Build nOS Lite
+name: Build nOS Lite ISO
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Stáhnout nOS Lite
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Nastavit Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      - name: Install dependencies
+      - name: Nainstalovat závislosti
         run: npm install
 
-      - name: Build nOS Lite
+      - name: Sestavit nOS Lite
         run: npm run build
 
-      - name: Upload web build
+      - name: Nainstalovat nástroje pro ISO
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            grub-pc-bin \
+            grub-common \
+            grub-efi-amd64-bin \
+            xorriso \
+            mtools
+
+      - name: Připravit ISO
+        run: |
+          mkdir -p iso/boot/grub
+          mkdir -p iso/nOS-Lite
+
+          cp -r dist/* iso/nOS-Lite/
+
+      - name: Vytvořit GRUB konfiguraci
+        run: |
+          cat > iso/boot/grub/grub.cfg <<'EOF'
+          set timeout=5
+          set default=0
+
+          menuentry "nOS Lite" {
+              echo "Starting nOS Lite..."
+          }
+          EOF
+
+      - name: Vytvořit ISO
+        run: |
+          grub-mkrescue -o nOS-Lite.iso iso
+
+      - name: Nahrát ISO
         uses: actions/upload-artifact@v4
         with:
-          name: nOS-Lite-web
-          path: dist/
+          name: nOS-Lite-ISO
+          path: nOS-Lite.iso
