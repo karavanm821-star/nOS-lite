@@ -1,7 +1,5 @@
-.set ALIGN,    1<<0
-.set MEMINFO,  1<<1
-.set FLAGS,    ALIGN | MEMINFO
 .set MAGIC,    0x1BADB002
+.set FLAGS,    0
 .set CHECKSUM, -(MAGIC + FLAGS)
 
 .section .multiboot
@@ -16,8 +14,17 @@
 
 _start:
     cli
+    mov $stack_top, %esp
+
     call kernel_main
 
-hang:
+halt:
+    cli
     hlt
-    jmp hang
+    jmp halt
+
+.section .bss
+.align 16
+stack_bottom:
+    .skip 16384
+stack_top:
