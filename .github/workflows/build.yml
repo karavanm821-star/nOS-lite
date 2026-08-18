@@ -8,21 +8,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Stáhnout nOS Lite
+      - name: Checkout nOS Lite
         uses: actions/checkout@v4
 
-      - name: Nastavit Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      - name: Nainstalovat závislosti
+      - name: Install dependencies
         run: npm install
 
-      - name: Sestavit nOS Lite
+      - name: Build nOS Lite
         run: npm run build
 
-      - name: Nainstalovat nástroje pro ISO
+      - name: Install ISO tools
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -32,14 +32,14 @@ jobs:
             xorriso \
             mtools
 
-      - name: Připravit ISO
+      - name: Prepare ISO
         run: |
+          rm -rf iso
           mkdir -p iso/boot/grub
           mkdir -p iso/nOS-Lite
-
           cp -r dist/* iso/nOS-Lite/
 
-      - name: Vytvořit GRUB konfiguraci
+      - name: Create GRUB configuration
         run: |
           cat > iso/boot/grub/grub.cfg <<'EOF'
           set timeout=5
@@ -50,11 +50,19 @@ jobs:
           }
           EOF
 
-      - name: Vytvořit ISO
+      - name: Build BIOS ISO
         run: |
-          grub-mkrescue -o nOS-Lite.iso iso
+          grub-mkrescue \
+            -d /usr/lib/grub/i386-pc \
+            -o nOS-Lite.iso \
+            iso
 
-      - name: Nahrát ISO
+      - name: Check ISO
+        run: |
+          ls -lh nOS-Lite.iso
+          xorriso -indev nOS-Lite.iso -report_el_torito plain
+
+      - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
           name: nOS-Lite-ISO
