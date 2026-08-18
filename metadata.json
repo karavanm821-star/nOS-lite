@@ -1,0 +1,6 @@
+{
+  "name": "nOS Lite",
+  "description": "Lightweight web operating system by NeuraWix, optimized for low-end devices.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
