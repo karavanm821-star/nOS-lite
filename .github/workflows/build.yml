@@ -43,11 +43,13 @@ jobs:
           }
           EOF
 
-      - name: Build ISO
+      - name: Build BIOS + UEFI ISO
         run: |
-          grub-mkrescue -o nOS-Lite.iso iso
+          grub-mkrescue \
+            -o nOS-Lite.iso \
+            iso
 
-      - name: Check ISO
+      - name: Verify ISO
         run: |
           ls -lh nOS-Lite.iso
           file nOS-Lite.iso
