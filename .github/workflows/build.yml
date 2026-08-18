@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout nOS Lite
         uses: actions/checkout@v4
 
       - name: Install tools
@@ -19,7 +19,6 @@ jobs:
             grub-pc-bin \
             grub-common \
             grub-efi-amd64-bin \
-            grub-efi-amd64 \
             xorriso \
             mtools
 
@@ -33,7 +32,7 @@ jobs:
             ! -name "nOS-Lite.iso" \
             -exec cp {} iso/nOS-Lite/ \;
 
-      - name: GRUB config
+      - name: Create GRUB configuration
         run: |
           cat > iso/boot/grub/grub.cfg <<'EOF'
           set timeout=3
@@ -47,11 +46,10 @@ jobs:
       - name: Build Legacy BIOS ISO
         run: |
           grub-mkrescue \
-            --modules="biosdisk iso9660" \
             -o nOS-Lite.iso \
             iso
 
-      - name: Verify
+      - name: Verify ISO
         run: |
           file nOS-Lite.iso
           ls -lh nOS-Lite.iso
