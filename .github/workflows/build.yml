@@ -16,27 +16,48 @@ jobs:
         with:
           node-version: 24
 
-      - name: Install dependencies
-        run: npm install
+      - name: Build nOS Lite web
+        run: |
+          npm install
+          npm run build
 
-      - name: Build nOS Lite
-        run: npm run build
-
-      - name: Install ISO tools
+      - name: Install OS development tools
         run: |
           sudo apt-get update
           sudo apt-get install -y \
+            gcc \
+            gcc-multilib \
+            binutils \
             grub-pc-bin \
             grub-common \
-            grub-efi-amd64-bin \
             xorriso \
             mtools
+
+      - name: Compile nOS Lite kernel
+        run: |
+          gcc -m32 \
+            -ffreestanding \
+            -fno-pie \
+            -fno-stack-protector \
+            -nostdlib \
+            -nodefaultlibs \
+            -c kernel.c \
+            -o kernel.o
+
+          as --32 boot.s -o boot.o
+
+          ld -m elf_i386 \
+            -T linker.ld \
+            -o kernel.bin \
+            boot.o kernel.o
 
       - name: Prepare ISO
         run: |
           rm -rf iso
           mkdir -p iso/boot/grub
           mkdir -p iso/nOS-Lite
+
+          cp kernel.bin iso/boot/kernel.bin
           cp -r dist/* iso/nOS-Lite/
 
       - name: Create GRUB configuration
@@ -46,23 +67,24 @@ jobs:
           set default=0
 
           menuentry "nOS Lite" {
-              echo "Starting nOS Lite..."
+              multiboot /boot/kernel.bin
+              boot
           }
           EOF
 
       - name: Build BIOS ISO
         run: |
           grub-mkrescue \
-            -d /usr/lib/grub/i386-pc \
             -o nOS-Lite.iso \
             iso
 
-      - name: Check ISO
+      - name: Verify files
         run: |
+          file kernel.bin
+          ls -lh kernel.bin
           ls -lh nOS-Lite.iso
-          xorriso -indev nOS-Lite.iso -report_el_torito plain
 
-      - name: Upload ISO
+      - name: Upload nOS Lite ISO
         uses: actions/upload-artifact@v4
         with:
           name: nOS-Lite-ISO
