@@ -17,10 +17,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y grub-pc-bin grub-efi-amd64-bin xorriso
 
-      - name: Prepare ISO
-        run: |
-          mkdir -p iso/boot/grub
-          cp -r . iso/nOS-Lite
+     - name: Prepare ISO
+  run: |
+    mkdir -p iso/boot/grub
+    mkdir -p iso/nOS-Lite
+    find . -maxdepth 1 -type f -not -name "nOS-Lite.iso" -exec cp {} iso/nOS-Lite/ \;
 
       - name: Create GRUB configuration
         run: |
